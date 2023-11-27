@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoneyPlannerWebAPI", "MoneyPlannerWebAPI.csproj", "{C3E2800D-9234-413C-B170-E587A30D54F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "..\Infrastructure\Infrastructure.csproj", "{DB9A0647-D148-436C-9BE9-4FC9B98510D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entity", "..\Entity\Entity.csproj", "{364A9CFB-3283-4CF2-9536-CC278D79B49C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C3E2800D-9234-413C-B170-E587A30D54F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3E2800D-9234-413C-B170-E587A30D54F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3E2800D-9234-413C-B170-E587A30D54F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3E2800D-9234-413C-B170-E587A30D54F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB9A0647-D148-436C-9BE9-4FC9B98510D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB9A0647-D148-436C-9BE9-4FC9B98510D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB9A0647-D148-436C-9BE9-4FC9B98510D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB9A0647-D148-436C-9BE9-4FC9B98510D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{364A9CFB-3283-4CF2-9536-CC278D79B49C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{364A9CFB-3283-4CF2-9536-CC278D79B49C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{364A9CFB-3283-4CF2-9536-CC278D79B49C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{364A9CFB-3283-4CF2-9536-CC278D79B49C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {42D91A87-0935-4D22-8421-FE64D50338F6}
+	EndGlobalSection
+EndGlobal
