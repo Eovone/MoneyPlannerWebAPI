@@ -1,4 +1,5 @@
 ﻿using Entity;
+using Infrastructure.Utilities;
 
 namespace Infrastructure.Repositories.UserRepo
 {
@@ -10,9 +11,16 @@ namespace Infrastructure.Repositories.UserRepo
             _context = context;
         }
 
-        public async Task<User> AddUser(User user)
+        public async Task<User> AddUser(string username, string password)
         {
-            if (IsUsernameTaken(user.Username)) return null;
+            if (PasswordValidator.Validate(password) == false) return null;
+
+            if (IsUsernameTaken(username)) return null;
+
+            var passwordSalt = PasswordHasher.GenerateSalt();
+            var passwordHash = PasswordHasher.HashPassword(password, passwordSalt);
+
+            var user = new User(username, passwordSalt, passwordHash);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

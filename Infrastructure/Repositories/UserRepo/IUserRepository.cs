@@ -4,7 +4,7 @@ namespace Infrastructure.Repositories.UserRepo
 {
     public interface IUserRepository
     {
-        Task<User> AddUser(User user);
+        Task<User> AddUser(string username, string password);
         Task<User> GetUser(int id);
     }
 }

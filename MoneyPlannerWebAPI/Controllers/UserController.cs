@@ -25,15 +25,15 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
-                var createdUser = await _repository.AddUser(_mapper.Map<User>(postUserDto));
+                var createdUser = await _repository.AddUser(postUserDto.Username,postUserDto.Password);
                 if (createdUser == null)
                 {
-                    _logger.LogWarning("Trying to create a User, but username already exist.");
-                    return BadRequest("Username already exists.");
+                    _logger.LogWarning("Trying to create a User, but username already exist or password was invalid");
+                    return BadRequest("Username already exists or password was invalid.");
                 }
-
-                _logger.LogInformation($"User: {createdUser.Username} with Id: {createdUser.Id} was successfully created.");
-                return CreatedAtAction("GetUser", new { id = createdUser.Id }, createdUser);
+                var getUserDto = _mapper.Map<GetUserDto>(createdUser);
+                _logger.LogInformation($"User: {getUserDto.Username} with Id: {getUserDto.Id} was successfully created.");
+                return CreatedAtAction("GetUser", new { id = getUserDto.Id }, getUserDto);
             }
             catch (Exception e)
             {
