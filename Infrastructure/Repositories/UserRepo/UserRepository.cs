@@ -1,5 +1,7 @@
 ﻿using Entity;
 using Infrastructure.Utilities;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Infrastructure.Repositories.UserRepo
 {
@@ -35,6 +37,19 @@ namespace Infrastructure.Repositories.UserRepo
             if (user == null) return null;
 
             return user;
+        }
+
+        public async Task<bool> LoginUser(string username, string password)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null) return false;
+
+            var hashedPassword = PasswordHasher.HashPassword(password, user.PasswordSalt);
+
+            if (hashedPassword == user.PasswordHash) return true;
+
+            return false;
         }
 
         #region Private Methods

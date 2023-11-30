@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.UserDto;
@@ -62,6 +61,27 @@ namespace MoneyPlannerWebAPI.Controllers
                 _logger.LogError(e, $"Error trying to get user with Id: {id}.");
                 return StatusCode(500, "Internal Server Error");
             }
-        }       
+        }
+        [HttpPost("Login")]
+        public async Task<ActionResult<bool>> LoginUser(PostUserDto postUserDto)
+        {
+            try
+            {
+                var isUserLoggedIn = await _repository.LoginUser(postUserDto.Username, postUserDto.Password);
+                if (isUserLoggedIn == false)
+                {
+                    _logger.LogWarning("Trying to login a User, but unauthorized");
+                    return Unauthorized(false);
+                }
+
+                _logger.LogInformation($"User with username: {postUserDto.Username} logged in");
+                return Ok(isUserLoggedIn);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error trying to login User.");
+                return StatusCode(500, "Internal Server Error");
+            }    
+        }
     }
 }
