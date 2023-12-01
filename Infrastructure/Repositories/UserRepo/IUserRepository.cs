@@ -1,4 +1,5 @@
 ﻿using Entity;
+using Infrastructure.Utilities;
 
 namespace Infrastructure.Repositories.UserRepo
 {
@@ -6,6 +7,6 @@ namespace Infrastructure.Repositories.UserRepo
     {
         Task<User> AddUser(string username, string password);
         Task<User> GetUser(int id);
-        Task<bool> LoginUser(string username, string password);
+        Task<LoginDto> LoginUser(string username, string password);
     }
 }
