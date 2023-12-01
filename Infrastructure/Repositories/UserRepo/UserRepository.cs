@@ -39,17 +39,21 @@ namespace Infrastructure.Repositories.UserRepo
             return user;
         }
 
-        public async Task<bool> LoginUser(string username, string password)
+        public async Task<LoginDto> LoginUser(string username, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-            if (user == null) return false;
+            if (user == null) return null;
 
             var hashedPassword = PasswordHasher.HashPassword(password, user.PasswordSalt);
 
-            if (hashedPassword == user.PasswordHash) return true;
+            if (hashedPassword == user.PasswordHash)
+            {
+                var loginDto = new LoginDto { Id = user.Id, IsAuthorized = true };
+                return loginDto;
+            }
 
-            return false;
+            return null;
         }
 
         #region Private Methods

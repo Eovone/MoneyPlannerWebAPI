@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.UserDto;
@@ -63,19 +64,19 @@ namespace MoneyPlannerWebAPI.Controllers
             }
         }
         [HttpPost("Login")]
-        public async Task<ActionResult<bool>> LoginUser(PostUserDto postUserDto)
+        public async Task<ActionResult<GetLoginUserDto>> LoginUser(PostUserDto postUserDto)
         {
             try
             {
                 var isUserLoggedIn = await _repository.LoginUser(postUserDto.Username, postUserDto.Password);
-                if (isUserLoggedIn == false)
+                if (isUserLoggedIn == null)
                 {
                     _logger.LogWarning("Trying to login a User, but unauthorized");
-                    return Unauthorized(false);
+                    return Unauthorized();
                 }
 
                 _logger.LogInformation($"User with username: {postUserDto.Username} logged in");
-                return Ok(isUserLoggedIn);
+                return Ok(_mapper.Map<GetLoginUserDto>(isUserLoggedIn));
             }
             catch (Exception e)
             {
