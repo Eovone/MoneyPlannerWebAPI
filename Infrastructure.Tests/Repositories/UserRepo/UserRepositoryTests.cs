@@ -1,6 +1,7 @@
 ﻿using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Infrastructure.Utilities;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Moq.EntityFrameworkCore;
 
@@ -98,7 +99,43 @@ namespace Infrastructure.Tests.Repositories.UserRepo
         }
         #endregion
         #region LoginUser-Tests
+        [Fact]
+        public async Task LoginUser_User_NotFound_Returns_NullObject_And_ValidStatus_NotFound()
+        {
+            string username = "TestUser1234";
+            string password = "Password1!";           
 
+            var (userResult, validationStatus) = await _sut.LoginUser(username, password);
+
+            Assert.Null(userResult);
+            Assert.Equal(ValidationStatus.Not_Found, validationStatus);
+        }
+
+        [Fact]
+        public async Task LoginUser_Input_WrongPassword_Returns_NullObject_And_ValidStatus_Wrong_Password()
+        {
+            string username = "TestUser1";
+            string password = "Password16533t1";
+
+            var (userResult, validationStatus) = await _sut.LoginUser(username, password);
+
+            Assert.Null(userResult);
+            Assert.Equal(ValidationStatus.Wrong_Password, validationStatus);
+        }
+
+        [Fact]
+        public async Task LoginUser_Input_Correct_Returns_LoginDto_And_ValidStatus_Success()
+        {
+            string username = "TestUser1";
+            string password = "Password1!";
+
+            var (userResult, validationStatus) = await _sut.LoginUser(username, password);
+
+            Assert.NotNull(userResult);
+            Assert.Equal(ValidationStatus.Success, validationStatus);
+            Assert.Equal(1, userResult.Id);
+            Assert.True(userResult.IsAuthorized);
+        }
         #endregion
     }
 }
