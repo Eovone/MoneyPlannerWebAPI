@@ -64,6 +64,7 @@ namespace MoneyPlannerWebAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
         [HttpPost("Login")]
         public async Task<ActionResult<GetLoginUserDto>> LoginUser(PostUserDto postUserDto)
         {
