@@ -6,6 +6,7 @@ namespace Infrastructure
 {
     public class DataContext : DbContext
     {
+        public DataContext() {}
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {            
         }
@@ -20,8 +21,8 @@ namespace Infrastructure
                 .WithOne(u => u.User);                
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Income> Incomes { get; set; }
-        public DbSet<Expense> Expenses { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Income> Incomes { get; set; }
+        public virtual DbSet<Expense> Expenses { get; set; }
     }
 }
