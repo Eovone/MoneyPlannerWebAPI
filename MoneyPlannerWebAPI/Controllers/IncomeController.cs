@@ -3,7 +3,6 @@ using Entity;
 using Infrastructure.Repositories.IncomeRepo;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.IncomeDto;
-using MoneyPlannerWebAPI.DTO.UserDto;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
@@ -59,7 +58,7 @@ namespace MoneyPlannerWebAPI.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error trying to get Income with Id: {id}.");
+                _logger.LogError("Error trying to get Income with Id: {e}.", e);
                 return StatusCode(500, "Internal Server Error");
             }
         }
@@ -80,7 +79,7 @@ namespace MoneyPlannerWebAPI.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error trying to get Incomes for user with Id: {userId}.");
+                _logger.LogError("Error trying to get Incomes for user with Id: {e}.", e);
                 return StatusCode(500, "Internal Server Error");
             }
         }
