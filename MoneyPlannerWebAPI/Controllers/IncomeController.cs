@@ -31,7 +31,7 @@ namespace MoneyPlannerWebAPI.Controllers
                     _logger.LogWarning("Trying to create an Income, but one or more of the properties are invalid.");
                     return BadRequest("Invalid property/ies.");
                 }
-
+                // returna objektet GetIncomeDto med mapper istället som är gjort i USER.
                 _logger.LogInformation($"Income with Id: {createdIncome.Id} was successfully created.");
                 return CreatedAtAction("GetIncome", new { id = createdIncome.Id }, createdIncome.Id);
             }

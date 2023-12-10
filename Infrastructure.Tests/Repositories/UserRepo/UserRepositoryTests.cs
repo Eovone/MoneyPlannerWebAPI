@@ -1,7 +1,6 @@
 ﻿using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Infrastructure.Utilities;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Moq.EntityFrameworkCore;
 
