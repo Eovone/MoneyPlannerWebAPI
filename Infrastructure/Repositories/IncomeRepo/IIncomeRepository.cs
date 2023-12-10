@@ -1,11 +1,12 @@
 ﻿using Entity;
+using Infrastructure.Utilities;
 
 namespace Infrastructure.Repositories.IncomeRepo
 {
     public interface IIncomeRepository
     {
-        Task<Income> AddIncome(Income income, int userId);
-        Task<Income> GetIncome(int id);
-        Task<List<Income>> GetUserIncomes(int userId);
+        Task<(Income?, ValidationStatus)> AddIncome(Income income, int userId);
+        Task<Income?> GetIncome(int id);
+        Task<List<Income>?> GetUserIncomes(int userId);
     }
 }

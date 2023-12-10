@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Entity;
 using Infrastructure.Repositories.IncomeRepo;
+using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.IncomeDto;
 
@@ -25,15 +26,16 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
-                var createdIncome = await _repository.AddIncome(_mapper.Map<Income>(postIncomeDto), userId);
-                if (createdIncome == null)
-                {
-                    _logger.LogWarning("Trying to create an Income, but one or more of the properties are invalid.");
-                    return BadRequest("Invalid property/ies.");
-                }
+                var (createdIncome, validationStatus) = await _repository.AddIncome(_mapper.Map<Income>(postIncomeDto), userId);
+
+                if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
+
+                if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
+
                 // returna objektet GetIncomeDto med mapper istället som är gjort i USER.
-                _logger.LogInformation($"Income with Id: {createdIncome.Id} was successfully created.");
-                return CreatedAtAction("GetIncome", new { id = createdIncome.Id }, createdIncome.Id);
+                var getIncomeDto = _mapper.Map<GetIncomeDto>(createdIncome);
+                _logger.LogInformation($"Income with Id: {getIncomeDto.Id} was successfully created.");
+                return CreatedAtAction("GetIncome", new { id = getIncomeDto.Id }, getIncomeDto);
             }
             catch (Exception e)
             {
@@ -50,7 +52,7 @@ namespace MoneyPlannerWebAPI.Controllers
                 var income = await _repository.GetIncome(id);
                 if (income == null)
                 {
-                    _logger.LogWarning($"Income with Id: {id}, does not exist.");
+                    _logger.LogError($"Income with Id: {id}, does not exist.");
                     return NotFound($"Income with Id: {id}, could not be found.");
                 }
                 _logger.LogInformation($"Income with Id: {income.Id}, fetched successfully.");
@@ -71,7 +73,7 @@ namespace MoneyPlannerWebAPI.Controllers
                 var incomeList = await _repository.GetUserIncomes(userId);
                 if (incomeList == null)
                 {
-                    _logger.LogWarning($"Incomes for user with Id: {userId}, does not exist.");
+                    _logger.LogError($"Incomes for user with Id: {userId}, does not exist.");
                     return NotFound($"Incomes for user with Id: {userId}, could not be found.");
                 }
                 _logger.LogInformation($"Incomes for user with Id: {userId}, fetched successfully.");

@@ -1,4 +1,6 @@
 ﻿using Entity;
+using Infrastructure.Utilities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.IncomeRepo
 {
@@ -10,33 +12,29 @@ namespace Infrastructure.Repositories.IncomeRepo
             _context = context;
         }
 
-        public async Task<Income> AddIncome(Income income, int userId)
-        {
+        public async Task<(Income?, ValidationStatus)> AddIncome(Income income, int userId)
+        {  
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-            if (user == null) return null;
+            if (user == null) return (null, ValidationStatus.Not_Found);
+
+            //Todo: validate the income and return proper validationstatuses
 
             user.Incomes.Add(income);
             await _context.SaveChangesAsync();
 
-            return income;
+            return (income, ValidationStatus.Success);
         }
 
-        public async Task<Income> GetIncome(int id)
+        public async Task<Income?> GetIncome(int id) => await _context.Incomes.FindAsync(id);      
+
+        public async Task<List<Income>?> GetUserIncomes(int userId)
         {
-            var income = _context.Incomes.FindAsync(id);
-
-            if (income.Result == null) return null;
-
-            return income.Result;
-        }
-
-        public async Task<List<Income>> GetUserIncomes(int userId)
-        {
-            var incomeList = _context.Incomes.Where(x => x.User.Id == userId).ToList();
+            var incomeList = await _context.Incomes.Where(x => x.User.Id == userId).ToListAsync();
 
             if (incomeList.Count == 0) return null;
 
             return incomeList;
         }
+
     }
 }
