@@ -31,8 +31,7 @@ namespace MoneyPlannerWebAPI.Controllers
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
 
                 if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
-
-                // returna objektet GetIncomeDto med mapper istället som är gjort i USER.
+               
                 var getIncomeDto = _mapper.Map<GetIncomeDto>(createdIncome);
                 _logger.LogInformation($"Income with Id: {getIncomeDto.Id} was successfully created.");
                 return CreatedAtAction("GetIncome", new { id = getIncomeDto.Id }, getIncomeDto);
