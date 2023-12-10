@@ -1,7 +1,6 @@
 ﻿using Entity;
 using Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Infrastructure.Repositories.UserRepo
 {
@@ -13,11 +12,11 @@ namespace Infrastructure.Repositories.UserRepo
             _context = context;
         }
 
-        public async Task<User> AddUser(string username, string password)
+        public async Task<(User?, ValidationStatus)> AddUser(string username, string password)
         {
-            if (PasswordValidator.Validate(password) == false) return null;
+            if (PasswordValidator.Validate(password) == false) return (null, ValidationStatus.Invalid_Password);
 
-            if (IsUsernameTaken(username)) return null;
+            if (IsUsernameTaken(username)) return (null, ValidationStatus.Username_Already_Exist);
 
             var passwordSalt = PasswordHasher.GenerateSalt();
             var passwordHash = PasswordHasher.HashPassword(password, passwordSalt);
@@ -27,33 +26,23 @@ namespace Infrastructure.Repositories.UserRepo
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return user;
+            return (user, ValidationStatus.Success);
         }
 
-        public async Task<User> GetUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
+        public async Task<User?> GetUser(int id) => await _context.Users.FindAsync(id);       
 
-            if (user == null) return null;
-
-            return user;
-        }
-
-        public async Task<LoginDto> LoginUser(string username, string password)
+        public async Task<(LoginDto?, ValidationStatus)> LoginUser(string username, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-            if (user == null) return null;
+            if (user == null) return (null, ValidationStatus.Not_Found);
 
             var hashedPassword = PasswordHasher.HashPassword(password, user.PasswordSalt);
 
-            if (hashedPassword == user.PasswordHash)
-            {
-                var loginDto = new LoginDto { Id = user.Id, IsAuthorized = true };
-                return loginDto;
-            }
+            if (hashedPassword != user.PasswordHash) return (null, ValidationStatus.Wrong_Password);            
 
-            return null;
+            var loginDto = new LoginDto { Id = user.Id, IsAuthorized = true };
+            return (loginDto, ValidationStatus.Success);
         }
 
         #region Private Methods
