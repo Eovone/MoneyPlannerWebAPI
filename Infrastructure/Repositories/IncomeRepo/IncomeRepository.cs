@@ -23,10 +23,48 @@ namespace Infrastructure.Repositories.IncomeRepo
             await _context.SaveChangesAsync();
 
             return (income, ValidationStatus.Success);
-        }
+        }     
 
         public async Task<Income?> GetIncome(int id) => await _context.Incomes.FindAsync(id);      
 
         public async Task<List<Income>?> GetUserIncomes(int userId) => await _context.Incomes.Where(x => x.User.Id == userId).ToListAsync();
+
+        public async Task<Income?> EditIncome(Income income, int id)
+        {
+            var incomeFromDb = await GetIncome(id);
+
+            if (incomeFromDb == null) return null;
+
+            var newIncome = UpdateIncome(incomeFromDb, income);       
+
+            await _context.SaveChangesAsync();
+            return newIncome;
+        }
+
+        public async Task<Income?> DeleteIncome(int id)
+        {
+            var incomeFromDb = await GetIncome(id);
+
+            if (incomeFromDb == null) return null;
+
+            _context.Incomes.Remove(incomeFromDb);
+            await _context.SaveChangesAsync();
+
+            return incomeFromDb;
+        }
+
+        #region Private Methods
+        public Income UpdateIncome(Income incomeFromDb, Income newIncome)
+        {
+            incomeFromDb.Title = newIncome.Title;
+            incomeFromDb.ReOccuring = newIncome.ReOccuring;
+            incomeFromDb.Date = newIncome.Date;
+            incomeFromDb.Amount = newIncome.Amount;
+            
+            return incomeFromDb;
+        }
+
+       
+        #endregion
     }
 }
