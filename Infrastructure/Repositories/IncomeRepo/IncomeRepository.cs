@@ -27,14 +27,6 @@ namespace Infrastructure.Repositories.IncomeRepo
 
         public async Task<Income?> GetIncome(int id) => await _context.Incomes.FindAsync(id);      
 
-        public async Task<List<Income>?> GetUserIncomes(int userId)
-        {
-            var incomeList = await _context.Incomes.Where(x => x.User.Id == userId).ToListAsync();
-
-            if (incomeList.Count == 0) return null;
-
-            return incomeList;
-        }
-
+        public async Task<List<Income>?> GetUserIncomes(int userId) => await _context.Incomes.Where(x => x.User.Id == userId).ToListAsync();
     }
 }

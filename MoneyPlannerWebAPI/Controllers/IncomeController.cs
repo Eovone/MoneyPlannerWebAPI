@@ -70,11 +70,7 @@ namespace MoneyPlannerWebAPI.Controllers
             try
             {
                 var incomeList = await _repository.GetUserIncomes(userId);
-                if (incomeList == null)
-                {
-                    _logger.LogError($"Incomes for user with Id: {userId}, does not exist.");
-                    return NotFound($"Incomes for user with Id: {userId}, could not be found.");
-                }
+           
                 _logger.LogInformation($"Incomes for user with Id: {userId}, fetched successfully.");
                 return Ok(_mapper.Map<List<GetIncomeDto>>(incomeList));
             }
