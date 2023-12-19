@@ -92,7 +92,7 @@ namespace MoneyPlannerWebAPI.Controllers
 
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
 
-                if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
+                if (validationStatus == ValidationStatus.Not_Found) return NotFound("Income not found");
                 if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
                 if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
              
@@ -117,6 +117,7 @@ namespace MoneyPlannerWebAPI.Controllers
                     _logger.LogError($"Income with Id: {id}, does not exist.");
                     return NotFound($"Income with Id: {id}, could not be found.");
                 }
+                _logger.LogInformation($"Income with Id: {id}, deleted successfully.");
                 return NoContent();
             }
             catch (Exception e)

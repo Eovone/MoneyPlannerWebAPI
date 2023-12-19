@@ -24,11 +24,48 @@ namespace Infrastructure.Repositories.ExpenseRepo
             await _context.SaveChangesAsync();
 
             return (expense, ValidationStatus.Success);
-        }
+        }       
 
         public async Task<Expense?> GetExpense(int id) => await _context.Expenses.FindAsync(id);
 
         public async Task<List<Expense>?> GetUserExpenses(int userId) => await _context.Expenses.Where(x => x.User.Id == userId).ToListAsync();
-      
+
+        public async Task<(Expense?, ValidationStatus)> EditExpense(Expense expense, int id)
+        {
+            var expenseFromDb = await GetExpense(id);
+
+            if (expenseFromDb == null) return (null, ValidationStatus.Not_Found);
+            if (!Validator.IsValidLength(expense.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
+            if (!Validator.IsValidAmount(expense.Amount)) return (null, ValidationStatus.Invalid_Amount);
+
+            var newExpense = UpdateExpense(expenseFromDb, expense);
+
+            await _context.SaveChangesAsync();
+            return (newExpense, ValidationStatus.Success);
+        }
+
+        public async Task<Expense?> DeleteExpense(int id)
+        {
+            var expenseFromDb = await GetExpense(id);
+
+            if (expenseFromDb == null) return null;
+
+            _context.Expenses.Remove(expenseFromDb);
+            await _context.SaveChangesAsync();
+
+            return expenseFromDb;
+        }
+
+        #region Private Methods
+        private Expense UpdateExpense(Expense expenseFromDb, Expense newExpense)
+        {
+            expenseFromDb.Title = newExpense.Title;
+            expenseFromDb.ReOccuring = newExpense.ReOccuring;
+            expenseFromDb.Date = newExpense.Date;
+            expenseFromDb.Amount = newExpense.Amount;
+
+            return newExpense;
+        }
+        #endregion
     }
 }

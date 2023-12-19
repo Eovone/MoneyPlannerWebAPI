@@ -8,5 +8,7 @@ namespace Infrastructure.Repositories.ExpenseRepo
         Task<(Expense?, ValidationStatus)> AddExpense(Expense expense, int userId);
         Task<Expense?> GetExpense(int id);
         Task<List<Expense>?> GetUserExpenses(int userId);
+        Task<(Expense?, ValidationStatus)> EditExpense(Expense expense, int id);
+        Task<Expense?> DeleteExpense(int id);
     }
 }

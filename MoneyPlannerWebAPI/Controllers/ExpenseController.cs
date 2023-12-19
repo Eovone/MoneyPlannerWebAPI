@@ -81,5 +81,49 @@ namespace MoneyPlannerWebAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<GetExpenseDto>> EditExpense(PostExpenseDto postExpense, int id)
+        {
+            try
+            {
+                var (editedExpense, validationStatus) = await _repository.EditExpense(_mapper.Map<Expense>(postExpense), id);
+
+                if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Expense: {ValidationStatus}", validationStatus.ToString());
+
+                if (validationStatus == ValidationStatus.Not_Found) return NotFound("Expense not found");
+                if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
+                if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
+
+                _logger.LogInformation($"Expense with Id: {id}, edited successfully.");
+                return Ok(_mapper.Map<GetExpenseDto>(editedExpense));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to edit Expense: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteExpense(int id)
+        {
+            try
+            {
+                var deletedExpense = await _repository.DeleteExpense(id);
+                if (deletedExpense == null)
+                {
+                    _logger.LogError($"Expense with Id: {id}, does not exist.");
+                    return NotFound($"Expense with Id: {id}, could not be found.");
+                }
+                _logger.LogInformation($"Expense with Id: {id}, deleted successfully.");
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to delete Expense: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
     }
 }
