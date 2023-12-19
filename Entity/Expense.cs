@@ -12,6 +12,7 @@
         public string Title { get; set; }
         public double Amount { get; set; }
         public DateTime Date { get; set; }
+        public bool ReOccuring { get; set; }
         public User User { get; set; }
     }
 }
