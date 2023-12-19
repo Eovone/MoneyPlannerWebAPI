@@ -80,5 +80,48 @@ namespace MoneyPlannerWebAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<GetIncomeDto>> EditIncome(PostIncomeDto postIncomeDto, int id)
+        {
+            try
+            {
+                //TODO: validation of the new data (edited income) needs to happen in the repository.
+                var editedIncome = await _repository.EditIncome(_mapper.Map<Income>(postIncomeDto), id);
+                if (editedIncome == null)
+                {
+                    _logger.LogError($"Income with Id: {id}, does not exist.");
+                    return NotFound($"Income with Id: {id}, could not be found.");
+                }                
+
+                _logger.LogInformation($"Income with Id: {id}, edited successfully.");
+                return Ok(_mapper.Map<GetIncomeDto>(editedIncome));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to edit Income: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteIncome(int id)
+        {
+            try
+            {
+                var deletedIncome = await _repository.DeleteIncome(id);
+                if (deletedIncome == null)
+                {
+                    _logger.LogError($"Income with Id: {id}, does not exist.");
+                    return NotFound($"Income with Id: {id}, could not be found.");
+                }
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to delete Income: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
     }
 }
