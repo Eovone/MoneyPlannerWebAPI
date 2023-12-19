@@ -31,6 +31,8 @@ namespace MoneyPlannerWebAPI.Controllers
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
 
                 if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
+                if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
+                if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
                
                 var getIncomeDto = _mapper.Map<GetIncomeDto>(createdIncome);
                 _logger.LogInformation($"Income with Id: {getIncomeDto.Id} was successfully created.");
@@ -86,14 +88,14 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
-                //TODO: validation of the new data (edited income) needs to happen in the repository.
-                var editedIncome = await _repository.EditIncome(_mapper.Map<Income>(postIncomeDto), id);
-                if (editedIncome == null)
-                {
-                    _logger.LogError($"Income with Id: {id}, does not exist.");
-                    return NotFound($"Income with Id: {id}, could not be found.");
-                }                
+                var (editedIncome, validationStatus) = await _repository.EditIncome(_mapper.Map<Income>(postIncomeDto), id);
 
+                if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
+
+                if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
+                if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
+                if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
+             
                 _logger.LogInformation($"Income with Id: {id}, edited successfully.");
                 return Ok(_mapper.Map<GetIncomeDto>(editedIncome));
             }

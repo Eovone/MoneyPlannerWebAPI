@@ -7,5 +7,7 @@
         Invalid_Password,
         Username_Already_Exist,
         Wrong_Password,
+        Invalid_Amount_Of_Characters,
+        Invalid_Amount,
     }
 }
