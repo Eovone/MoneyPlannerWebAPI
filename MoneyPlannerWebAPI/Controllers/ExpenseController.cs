@@ -32,6 +32,8 @@ namespace MoneyPlannerWebAPI.Controllers
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Expense: {ValidationStatus}", validationStatus.ToString());
 
                 if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
+                if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
+                if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
 
                 var getExpenseDto = _mapper.Map<GetExpenseDto>(createdExpense);
                 _logger.LogInformation($"Expense with Id: {getExpenseDto.Id} was successfully created.");
