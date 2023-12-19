@@ -4,6 +4,7 @@ using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
+using MoneyPlannerWebAPI.DTO.IncomeDto;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
@@ -60,6 +61,23 @@ namespace MoneyPlannerWebAPI.Controllers
             catch (Exception e)
             {
                 _logger.LogError("Error trying to get Expense with Id: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpGet("User/{userId}")]
+        public async Task<ActionResult<List<GetExpenseDto>>> GetUserExpenses(int userId)
+        {
+            try
+            {
+                var expenseList = await _repository.GetUserExpenses(userId);
+
+                _logger.LogInformation($"Expenses for user with Id: {userId}, fetched successfully.");
+                return Ok(_mapper.Map<List<GetExpenseDto>>(expenseList));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to get Expenses for user with Id: {e}.", e);
                 return StatusCode(500, "Internal Server Error");
             }
         }

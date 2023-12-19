@@ -17,8 +17,8 @@ namespace Infrastructure.Repositories.IncomeRepo
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
 
             if (user == null) return (null, ValidationStatus.Not_Found);
-            if (!IsValidLength(income.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
-            if (!IsValidAmount(income.Amount)) return (null, ValidationStatus.Invalid_Amount);      
+            if (!Validator.IsValidLength(income.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
+            if (!Validator.IsValidAmount(income.Amount)) return (null, ValidationStatus.Invalid_Amount);      
 
             user.Incomes.Add(income);
             await _context.SaveChangesAsync();
@@ -35,8 +35,8 @@ namespace Infrastructure.Repositories.IncomeRepo
             var incomeFromDb = await GetIncome(id);
 
             if (incomeFromDb == null) return (null, ValidationStatus.Not_Found);
-            if (!IsValidLength(income.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
-            if (!IsValidAmount(income.Amount)) return (null, ValidationStatus.Invalid_Amount);
+            if (!Validator.IsValidLength(income.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
+            if (!Validator.IsValidAmount(income.Amount)) return (null, ValidationStatus.Invalid_Amount);
 
             var newIncome = UpdateIncome(incomeFromDb, income);       
 
@@ -65,25 +65,7 @@ namespace Infrastructure.Repositories.IncomeRepo
             incomeFromDb.Amount = newIncome.Amount;
             
             return incomeFromDb;
-        }
-
-        private bool IsValidLength(string incomeTitle)
-        {
-            if (string.IsNullOrEmpty(incomeTitle)) return false;
-            if (incomeTitle.Length > 50) return false;
-            if (incomeTitle.Length < 2) return false;
-            return true;
-        }
-
-        private bool IsValidAmount(double incomeAmount)
-        {
-            if (!double.IsNaN(incomeAmount)) return false;
-            if (incomeAmount < 1) return false;
-            if (incomeAmount > 10000000) return false;
-            return true;
-        }
-
-
+        }       
         #endregion
     }
 }
