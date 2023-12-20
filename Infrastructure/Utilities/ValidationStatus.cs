@@ -9,5 +9,6 @@
         Wrong_Password,
         Invalid_Amount_Of_Characters,
         Invalid_Amount,
+        No_Data_To_Make_Analysis,
     }
 }
