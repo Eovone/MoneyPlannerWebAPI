@@ -1,6 +1,5 @@
 ﻿using Entity;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 
 namespace Infrastructure
 {
@@ -14,15 +13,31 @@ namespace Infrastructure
         {
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Incomes)
-                .WithOne(u => u.User);
+                .WithOne(i => i.User)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Expenses)
-                .WithOne(u => u.User);                
+                .WithOne(e => e.User)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.MonthAnalysis)
+                .WithOne(ma => ma.User)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Income>()
+                .HasMany(i => i.MonthAnalysis)
+                .WithMany(ma => ma.Incomes);
+
+            modelBuilder.Entity<Expense>()
+                .HasMany(e => e.MonthAnalysis)
+                .WithMany(ma => ma.Expenses);
         }
 
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Income> Incomes { get; set; }
         public virtual DbSet<Expense> Expenses { get; set; }
+        public virtual DbSet<MonthAnalysis> MonthAnalysis { get; set; }
     }
 }

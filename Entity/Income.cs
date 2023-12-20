@@ -14,5 +14,6 @@
         public DateTime Date { get; set; }
         public bool ReOccuring { get; set; }
         public User User { get; set; }
+        public ICollection<MonthAnalysis> MonthAnalysis { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Entity;
 using Infrastructure.Utilities;
+using MoneyPlannerWebAPI.DTO.AnalysisDto;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
 using MoneyPlannerWebAPI.DTO.IncomeDto;
 using MoneyPlannerWebAPI.DTO.UserDto;
@@ -20,6 +21,8 @@ namespace MoneyPlannerWebAPI.Utilities
 
             CreateMap<Expense, PostExpenseDto>().ReverseMap();
             CreateMap<Expense, GetExpenseDto>().ReverseMap();
+
+            CreateMap<MonthAnalysis, GetMonthlyAnalysisDto>().ReverseMap();
         }
     }
 }
