@@ -12,7 +12,6 @@
 
         public static bool IsValidAmount(double amount)
         {
-            if (double.IsNaN(amount)) return false;
             if (amount < 1) return false;
             if (amount > 10000000) return false;
             return true;
