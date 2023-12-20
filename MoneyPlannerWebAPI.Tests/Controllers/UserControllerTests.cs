@@ -101,7 +101,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         public async Task GetUser_UserNotFound_Returns_404()
         {
             _userRepositoryMock.Setup(x => x.GetUser(1))
-                               .ReturnsAsync((User)null);
+                               .ReturnsAsync(null as User);
 
             var result = await _sut.GetUser(1);
 
