@@ -13,7 +13,7 @@ namespace MoneyPlannerWebAPI.Controllers
     {
         private readonly IMapper _mapper;
         private readonly IIncomeRepository _repository;
-        private readonly ILogger<IncomeController> _logger;
+        private readonly ILogger<IncomeController> _logger;        
         public IncomeController(IMapper mapper, IIncomeRepository repository, ILogger<IncomeController> logger)
         {
             _mapper = mapper;

@@ -1,4 +1,5 @@
 using Infrastructure;
+using Infrastructure.Repositories.AnalysisRepo;
 using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Repositories.IncomeRepo;
 using Infrastructure.Repositories.UserRepo;
@@ -28,6 +29,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IIncomeRepository, IncomeRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<IAnalysisRepository, AnalysisRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

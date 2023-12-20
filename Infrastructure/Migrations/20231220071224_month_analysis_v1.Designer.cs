@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20231219064139_prop_add_to_expense")]
-    partial class prop_add_to_expense
+    [Migration("20231220071224_month_analysis_v1")]
+    partial class month_analysis_v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,6 +87,33 @@ namespace Infrastructure.Migrations
                     b.ToTable("Incomes");
                 });
 
+            modelBuilder.Entity("Entity.MonthAnalysis", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SummaryAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MonthAnalysis");
+                });
+
             modelBuilder.Entity("Entity.User", b =>
                 {
                     b.Property<int>("Id")
@@ -112,12 +139,42 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ExpenseMonthAnalysis", b =>
+                {
+                    b.Property<int>("ExpensesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthAnalysisId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ExpensesId", "MonthAnalysisId");
+
+                    b.HasIndex("MonthAnalysisId");
+
+                    b.ToTable("ExpenseMonthAnalysis");
+                });
+
+            modelBuilder.Entity("IncomeMonthAnalysis", b =>
+                {
+                    b.Property<int>("IncomesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthAnalysisId")
+                        .HasColumnType("int");
+
+                    b.HasKey("IncomesId", "MonthAnalysisId");
+
+                    b.HasIndex("MonthAnalysisId");
+
+                    b.ToTable("IncomeMonthAnalysis");
+                });
+
             modelBuilder.Entity("Entity.Expense", b =>
                 {
                     b.HasOne("Entity.User", "User")
                         .WithMany("Expenses")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -128,10 +185,51 @@ namespace Infrastructure.Migrations
                     b.HasOne("Entity.User", "User")
                         .WithMany("Incomes")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Entity.MonthAnalysis", b =>
+                {
+                    b.HasOne("Entity.User", "User")
+                        .WithMany("MonthAnalysis")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpenseMonthAnalysis", b =>
+                {
+                    b.HasOne("Entity.Expense", null)
+                        .WithMany()
+                        .HasForeignKey("ExpensesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entity.MonthAnalysis", null)
+                        .WithMany()
+                        .HasForeignKey("MonthAnalysisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IncomeMonthAnalysis", b =>
+                {
+                    b.HasOne("Entity.Income", null)
+                        .WithMany()
+                        .HasForeignKey("IncomesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entity.MonthAnalysis", null)
+                        .WithMany()
+                        .HasForeignKey("MonthAnalysisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Entity.User", b =>
@@ -139,6 +237,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Expenses");
 
                     b.Navigation("Incomes");
+
+                    b.Navigation("MonthAnalysis");
                 });
 #pragma warning restore 612, 618
         }

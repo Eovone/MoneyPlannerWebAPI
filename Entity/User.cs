@@ -16,5 +16,6 @@ namespace Entity
         public string PasswordHash { get; private set; }
         public List<Income> Incomes { get; set; } = new();
         public List<Expense> Expenses { get; set; } = new();
+        public List<MonthAnalysis> MonthAnalysis { get; set; } = new();
     }
 }
