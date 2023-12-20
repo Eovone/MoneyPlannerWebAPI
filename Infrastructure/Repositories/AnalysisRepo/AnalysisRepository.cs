@@ -34,6 +34,21 @@ namespace Infrastructure.Repositories.AnalysisRepo
         }
         public async Task<MonthAnalysis?> GetMonthAnalysis(int id) => await _context.MonthAnalysis.FindAsync(id);
 
+        public async Task<MonthAnalysis?> GetMonthAnalysisByMonth(int monthNumber, int year, int userId)
+        {
+            var user = await GetUserAsync(userId);
+            if (user == null) return null;
+
+            var monthAnalysis = await _context.MonthAnalysis.Where(x => x.User.Id == userId && x.Year == year && x.Month == monthNumber)
+                                                            .Include(x => x.Incomes)
+                                                            .Include(x => x.Expenses)
+                                                            .FirstOrDefaultAsync();
+                                                      
+            if (monthAnalysis == null) return null;
+
+            return monthAnalysis;
+        }
+
         #region Private Methods
         private async Task<User?> GetUserAsync(int userId) =>
             await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);       
@@ -79,7 +94,9 @@ namespace Infrastructure.Repositories.AnalysisRepo
             return monthAnalysis;
         }
 
-        
+       
+
+
         #endregion
 
     }

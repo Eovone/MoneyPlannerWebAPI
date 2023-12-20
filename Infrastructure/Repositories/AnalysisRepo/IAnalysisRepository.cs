@@ -7,5 +7,6 @@ namespace Infrastructure.Repositories.AnalysisRepo
     {
         Task<(MonthAnalysis?, ValidationStatus)> CreateMonthAnalysis(int monthNumber, int year, int userId);
         Task<MonthAnalysis?> GetMonthAnalysis(int id);
+        Task<MonthAnalysis?> GetMonthAnalysisByMonth(int monthNumber, int year, int userId);
     }
 }

@@ -3,7 +3,6 @@ using Infrastructure.Repositories.AnalysisRepo;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.AnalysisDto;
-using MoneyPlannerWebAPI.DTO.IncomeDto;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
@@ -54,6 +53,27 @@ namespace MoneyPlannerWebAPI.Controllers
                 {
                     _logger.LogError($"MonthAnalysis with Id: {id}, does not exist.");
                     return NotFound($"MonthAnalysis with Id: {id}, could not be found.");
+                }
+                _logger.LogInformation($"MonthAnalysis with Id: {monthAnalysis.Id}, fetched successfully.");
+                return Ok(_mapper.Map<GetMonthlyAnalysisDto>(monthAnalysis));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to get MonthAnalysis with Id: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpGet("User/{userId}/Year/{year}/Month/{monthNumber}")]
+        public async Task<ActionResult<GetMonthlyAnalysisDto>> GetMonthAnalysisByMonth(int userId, int year, int monthNumber)
+        {
+            try
+            {
+                var monthAnalysis = await _repository.GetMonthAnalysisByMonth(monthNumber, year, userId);
+                if (monthAnalysis == null)
+                {
+                    _logger.LogError($"MonthAnalysis for month: {monthNumber}, does not exist.");
+                    return NotFound($"MonthAnalysis for month: {monthNumber}, does not exist.");
                 }
                 _logger.LogInformation($"MonthAnalysis with Id: {monthAnalysis.Id}, fetched successfully.");
                 return Ok(_mapper.Map<GetMonthlyAnalysisDto>(monthAnalysis));
