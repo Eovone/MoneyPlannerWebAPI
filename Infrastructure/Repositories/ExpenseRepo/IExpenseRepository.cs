@@ -10,5 +10,6 @@ namespace Infrastructure.Repositories.ExpenseRepo
         Task<List<Expense>?> GetUserExpenses(int userId);
         Task<(Expense?, ValidationStatus)> EditExpense(Expense expense, int id);
         Task<Expense?> DeleteExpense(int id);
+        Task<List<Expense>?> GetUserExpensesByMonth(int userId, int year, int monthNumber);
     }
 }

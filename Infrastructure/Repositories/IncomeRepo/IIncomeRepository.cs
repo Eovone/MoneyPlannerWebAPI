@@ -10,5 +10,6 @@ namespace Infrastructure.Repositories.IncomeRepo
         Task<List<Income>?> GetUserIncomes(int userId);
         Task<(Income?, ValidationStatus)> EditIncome(Income income, int id);
         Task<Income?> DeleteIncome(int id);
+        Task<List<Income>?> GetUserIncomesByMonth(int userId, int year, int monthNumber);
     }
 }

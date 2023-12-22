@@ -126,5 +126,22 @@ namespace MoneyPlannerWebAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
+        [HttpGet("User/{userId}/Year/{year}/Month/{monthNumber}")]
+        public async Task<ActionResult<List<GetIncomeDto>>> GetUserIncomesByMonth(int userId, int year, int monthNumber)
+        {
+            try
+            {
+                var incomeList = await _repository.GetUserIncomesByMonth(userId, year, monthNumber);
+
+                _logger.LogInformation($"Incomes for user with Id: {userId}, fetched successfully.");
+                return Ok(_mapper.Map<List<GetIncomeDto>>(incomeList));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to get Incomes for user with Id: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
     }
 }

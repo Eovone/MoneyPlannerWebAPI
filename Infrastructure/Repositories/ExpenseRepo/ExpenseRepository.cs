@@ -56,6 +56,11 @@ namespace Infrastructure.Repositories.ExpenseRepo
             return expenseFromDb;
         }
 
+        public async Task<List<Expense>?> GetUserExpensesByMonth(int userId, int year, int monthNumber) =>
+            await _context.Expenses.Where(x => x.User.Id == userId && x.Date.Year == year && x.Date.Month == monthNumber)
+                                   .ToListAsync();
+
+
         #region Private Methods
         private Expense UpdateExpense(Expense expenseFromDb, Expense newExpense)
         {
@@ -66,6 +71,7 @@ namespace Infrastructure.Repositories.ExpenseRepo
 
             return newExpense;
         }
+        
         #endregion
     }
 }

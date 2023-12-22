@@ -28,7 +28,8 @@ namespace Infrastructure.Repositories.IncomeRepo
 
         public async Task<Income?> GetIncome(int id) => await _context.Incomes.FindAsync(id);      
 
-        public async Task<List<Income>?> GetUserIncomes(int userId) => await _context.Incomes.Where(x => x.User.Id == userId).ToListAsync();
+        public async Task<List<Income>?> GetUserIncomes(int userId) => await _context.Incomes.Where(x => x.User.Id == userId)
+                                                                                             .ToListAsync();
 
         public async Task<(Income?, ValidationStatus)> EditIncome(Income income, int id)
         {
@@ -56,6 +57,11 @@ namespace Infrastructure.Repositories.IncomeRepo
             return incomeFromDb;
         }
 
+        public async Task<List<Income>?> GetUserIncomesByMonth(int userId, int year, int monthNumber) => 
+            await _context.Incomes.Where(x => x.User.Id == userId && x.Date.Year == year && x.Date.Month == monthNumber)
+                                  .ToListAsync();
+        
+
         #region Private Methods
         private Income UpdateIncome(Income incomeFromDb, Income newIncome)
         {
@@ -65,7 +71,9 @@ namespace Infrastructure.Repositories.IncomeRepo
             incomeFromDb.Amount = newIncome.Amount;
             
             return incomeFromDb;
-        }       
+        }
+
+        
         #endregion
     }
 }
