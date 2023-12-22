@@ -60,7 +60,6 @@ namespace Infrastructure.Repositories.ExpenseRepo
             await _context.Expenses.Where(x => x.User.Id == userId && x.Date.Year == year && x.Date.Month == monthNumber)
                                    .ToListAsync();
 
-
         #region Private Methods
         private Expense UpdateExpense(Expense expenseFromDb, Expense newExpense)
         {
@@ -70,8 +69,7 @@ namespace Infrastructure.Repositories.ExpenseRepo
             expenseFromDb.Amount = newExpense.Amount;
 
             return newExpense;
-        }
-        
+        }        
         #endregion
     }
 }

@@ -243,7 +243,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
                             .ReturnsAsync(_incomeList.FirstOrDefault(i => i.Id == incomeId));
 
             _mockDataContext.Setup(x => x.Incomes.Remove(It.IsAny<Income>()))
-                .Callback<Income>(incomeToRemove => _incomeList.Remove(incomeToRemove));
+                            .Callback<Income>(incomeToRemove => _incomeList.Remove(incomeToRemove));
 
             var incomeResult = await _sut.DeleteIncome(incomeId);
 

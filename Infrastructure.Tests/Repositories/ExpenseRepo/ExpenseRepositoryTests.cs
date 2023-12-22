@@ -224,5 +224,64 @@ namespace Infrastructure.Tests.Repositories.ExpenseRepo
             Assert.Equal(ValidationStatus.Success, validationStatus);
         }
         #endregion
+        #region DeleteExpense-Tests
+        [Fact]
+        public async Task DeleteExpense_Expense_NotFound_Returns_Null()
+        {
+            int expenseId = 20;
+
+            var expenseResult = await _sut.DeleteExpense(expenseId);
+
+            Assert.Null(expenseResult);
+        }
+
+        [Fact]
+        public async Task DeleteExpense_Expense_Found_Returns_Expense()
+        {
+            int expenseId = 1;
+            _mockDataContext.Setup(x => x.Expenses.FindAsync(expenseId))
+                            .ReturnsAsync(_expenseList.FirstOrDefault(i => i.Id == expenseId));
+
+            _mockDataContext.Setup(x => x.Expenses.Remove(It.IsAny<Expense>()))
+                            .Callback<Expense>(expenseToRemove => _expenseList.Remove(expenseToRemove));
+
+            var expenseResult = await _sut.DeleteExpense(expenseId);
+
+            Assert.NotNull(expenseResult);
+            Assert.Equal(expenseId, expenseResult.Id);
+            Assert.DoesNotContain(expenseResult, _expenseList);
+            _mockDataContext.Verify(x => x.Expenses.Remove(It.IsAny<Expense>()), Times.Once);
+            _mockDataContext.Verify(x => x.SaveChangesAsync(default), Times.Once);
+        }
+        #endregion
+        #region GetUserExpensesByMonth-Tests
+        [Fact]
+        public async Task GetUserExpensesByMonth_No_Expenses_Returns_Empty_List()
+        {
+            var salt = PasswordHasher.GenerateSalt();
+            var hash = PasswordHasher.HashPassword($"Password20!", salt);
+            var user = new User($"TestUser20", salt, hash);
+            user.Id = 20;
+
+            var expenseResult = await _sut.GetUserExpensesByMonth(user.Id, 2022, 3);
+
+            Assert.NotNull(expenseResult);
+            Assert.Empty(expenseResult);
+        }
+
+        [Fact]
+        public async Task GetUserExpensesByMonth_With_One_Expense_Returns_List_With_One_Expense()
+        {
+            var userId = 1;
+
+            var expenseResult = await _sut.GetUserExpensesByMonth(userId, 2023, 1);
+
+            Assert.NotNull(expenseResult);
+            Assert.Single(expenseResult);
+            var firstExpense = expenseResult.First();
+            Assert.Equal(2023, firstExpense.Date.Year);
+            Assert.Equal(1, firstExpense.Date.Month);
+        }
+        #endregion
     }
 }
