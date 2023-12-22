@@ -141,7 +141,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetIncome_Income_NotFound_Returns_200()
+        public async Task GetIncome_Income_Found_Returns_200()
         {
             var income = new Income("testIncome", 500, new DateTime());
             income.Id = 1;
@@ -312,7 +312,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteIncome_IncomeNotFound_Returns_404()
+        public async Task DeleteIncome_Income_NotFound_Returns_404()
         {
             int incomeId = 1;
 
@@ -337,6 +337,47 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             var result = await _sut.DeleteIncome(incomeId);
 
             var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, objectResult.StatusCode);
+            Assert.Equal("Internal Server Error", objectResult.Value);
+        }
+        #endregion
+        #region GetUserIncomesByMonth-Tests
+        [Fact]
+        public async Task GetUserIncomesByMonth_Returns_List_Of_Incomes_Returns_200()
+        {
+            int userId = 1;
+            var dateTime = new DateTime(2023, 12, 1);
+
+            var mockIncomeList = new List<Income>
+            {
+                new Income("income1", 200, dateTime) { Id = 1, ReOccuring = false },
+                new Income("income2", 200, dateTime) { Id = 2, ReOccuring = false },
+            };
+
+            _incomeRepositoryMock.Setup(repo => repo.GetUserIncomesByMonth(userId, 2023, 12))
+                                 .ReturnsAsync(mockIncomeList);
+
+            _mockMapper.Setup(x => x.Map<List<GetIncomeDto>>(It.IsAny<List<Income>>()))
+                       .Returns(new List<GetIncomeDto>());
+
+            var result = await _sut.GetUserIncomesByMonth(userId, 2023, 12);
+
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.IsType<List<GetIncomeDto>>(okResult.Value);
+        }
+
+        [Fact]
+        public async Task GetUserIncomesByMonth_InternalServerError_Returns_500()
+        {
+            int userId = 1;
+
+            _incomeRepositoryMock.Setup(repo => repo.GetUserIncomesByMonth(userId, 2022, 3))
+                                 .ThrowsAsync(new Exception("Simulated repository exception"));
+
+            var result = await _sut.GetUserIncomesByMonth(userId, 2022, 3);
+
+            var objectResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(500, objectResult.StatusCode);
             Assert.Equal("Internal Server Error", objectResult.Value);
         }
