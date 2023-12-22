@@ -141,7 +141,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetIncome_Income_NotFound_Returns_200()
+        public async Task GetIncome_Income_Found_Returns_200()
         {
             var income = new Income("testIncome", 500, new DateTime());
             income.Id = 1;
@@ -312,7 +312,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteIncome_IncomeNotFound_Returns_404()
+        public async Task DeleteIncome_Income_NotFound_Returns_404()
         {
             int incomeId = 1;
 
