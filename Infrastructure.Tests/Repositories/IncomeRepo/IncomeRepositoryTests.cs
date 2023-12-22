@@ -44,7 +44,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
 
             for (int i = 1; i < 6; i++)
             {
-                incomeList.Add(new Income($"TestTitle{i}", i, new DateTime())
+                incomeList.Add(new Income($"TestTitle{i}", i, new DateTime(2023, i, 5))
                 { Id = i, ReOccuring = false, User = users[i - 1] });
             }
             return incomeList;
@@ -248,6 +248,35 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
             Assert.DoesNotContain(incomeResult, _incomeList);
             _mockDataContext.Verify(x => x.Incomes.Remove(It.IsAny<Income>()), Times.Once);
             _mockDataContext.Verify(x => x.SaveChangesAsync(default), Times.Once);
+        }
+        #endregion
+        #region GetUserIncomesByMonth-Tests
+        [Fact]
+        public async Task GetUserIncomesByMonth_No_Incomes_Returns_Empty_List()
+        {
+            var salt = PasswordHasher.GenerateSalt();
+            var hash = PasswordHasher.HashPassword($"Password20!", salt);
+            var user = new User($"TestUser20", salt, hash);
+            user.Id = 20;
+
+            var incomeResult = await _sut.GetUserIncomesByMonth(user.Id, 2022, 3);
+
+            Assert.NotNull(incomeResult);
+            Assert.Empty(incomeResult);
+        }
+
+        [Fact]
+        public async Task GetUserIncomesByMonth_With_One_Income_Returns_List_With_One_Income()
+        {
+            var userId = 1;
+
+            var incomeResult = await _sut.GetUserIncomesByMonth(userId, 2023, 1);
+
+            Assert.NotNull(incomeResult);
+            Assert.Single(incomeResult);
+            var firstIncome = incomeResult.First();
+            Assert.Equal(2023, firstIncome.Date.Year);
+            Assert.Equal(1, firstIncome.Date.Month);
         }
         #endregion
     }
