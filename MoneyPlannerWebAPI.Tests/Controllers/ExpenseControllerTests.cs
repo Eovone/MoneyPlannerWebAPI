@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneyPlannerWebAPI.Controllers;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
-using MoneyPlannerWebAPI.DTO.IncomeDto;
 using Moq;
 using System.Text;
 

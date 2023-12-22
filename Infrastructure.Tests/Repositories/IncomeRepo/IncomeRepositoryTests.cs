@@ -62,6 +62,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
             Assert.Null(incomeResult);
             Assert.Equal(ValidationStatus.Not_Found, validationStatus);
         }
+
         [Theory]
         [InlineData("")]
         [InlineData("a")]
@@ -170,6 +171,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
             Assert.Null(incomeResult);
             Assert.Equal(ValidationStatus.Not_Found, validationStatus);
         }
+
         [Theory]
         [InlineData("")]
         [InlineData("a")]
@@ -187,6 +189,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
             Assert.Null(incomeResult);
             Assert.Equal(ValidationStatus.Invalid_Amount_Of_Characters, validationStatus);
         }
+
         [Theory]
         [InlineData(0)]
         [InlineData(-5)]
@@ -204,6 +207,7 @@ namespace Infrastructure.Tests.Repositories.IncomeRepo
             Assert.Null(incomeResult);
             Assert.Equal(ValidationStatus.Invalid_Amount, validationStatus);
         }
+
         [Fact]
         public async Task EditIncome_Valid_Input_Returns_Updated_Income_And_ValidationStatus_Success()
         {
