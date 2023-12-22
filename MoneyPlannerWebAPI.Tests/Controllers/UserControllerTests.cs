@@ -179,12 +179,13 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         {
             var postUserDto = new PostUserDto { Username = "testUser", Password = "testPassword" };
             var loginDto = new LoginDto { Id = 1, IsAuthorized = true };
+            var getLoginUserDto = new GetLoginUserDto {  Id = 1, IsAuthorized = true };
 
             _userRepositoryMock.Setup(x => x.LoginUser(postUserDto.Username, postUserDto.Password))
                                .ReturnsAsync((loginDto, ValidationStatus.Success));
 
             _mockMapper.Setup(x => x.Map<GetLoginUserDto>(loginDto))
-                       .Returns(new GetLoginUserDto());
+                       .Returns(getLoginUserDto);
 
             var result = await _sut.LoginUser(postUserDto);
 
