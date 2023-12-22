@@ -40,7 +40,7 @@ namespace MoneyPlannerWebAPI.Controllers
             {
                 _logger.LogError(e, "Error trying to create MonthAnalysis.");
                 return StatusCode(500, "Internal Server Error");
-            }           
+            }
         }
 
         [HttpGet("{id}")]

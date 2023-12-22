@@ -17,8 +17,8 @@ namespace Infrastructure.Repositories.AnalysisRepo
             var user = await GetUserAsync(userId);
             if (user == null) return (null, ValidationStatus.Not_Found);
 
-            var monthAnalysisToDelete = GetMonthAnalysis(monthNumber, year, user);
-            if (monthAnalysisToDelete != null) RemoveMonthAnalysis(monthAnalysisToDelete);            
+            var monthAnalysisList = await GetMonthAnalysis(monthNumber, year, user);
+            if (monthAnalysisList.Count() != 0) await RemoveMonthAnalysis(monthAnalysisList);
 
             var incomes = await GetIncomes(monthNumber, year, userId);
             var expenses = await GetExpenses(monthNumber, year, userId);
@@ -48,12 +48,20 @@ namespace Infrastructure.Repositories.AnalysisRepo
 
             return monthAnalysis;
         }
-
+       
         #region Private Methods
         private async Task<User?> GetUserAsync(int userId) =>
-            await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);       
-        private List<MonthAnalysis>? GetMonthAnalysis(int monthNumber, int year, User user) => user.MonthAnalysis.Where(x => x.Year == year && x.Month == monthNumber).ToList();
-        private async void RemoveMonthAnalysis(List<MonthAnalysis> listOfMonthAnalysis)
+            await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        private async Task<List<MonthAnalysis>> GetMonthAnalysis(int monthNumber, int year, User user)
+        {
+            var monthAnalysisList = await _context.MonthAnalysis.Where(x => x.User.Id == user.Id && x.Year == year && x.Month == monthNumber)
+                                                                .Include(x => x.Incomes)
+                                                                .Include(x => x.Expenses)
+                                                                .ToListAsync();
+            return monthAnalysisList;
+
+        }
+        private async Task RemoveMonthAnalysis(List<MonthAnalysis> listOfMonthAnalysis)
         {
             _context.MonthAnalysis.RemoveRange(listOfMonthAnalysis);
             await _context.SaveChangesAsync();
@@ -93,10 +101,6 @@ namespace Infrastructure.Repositories.AnalysisRepo
 
             return monthAnalysis;
         }
-
-       
-
-
         #endregion
 
     }

@@ -4,7 +4,6 @@ using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
-using MoneyPlannerWebAPI.DTO.IncomeDto;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
@@ -124,6 +123,23 @@ namespace MoneyPlannerWebAPI.Controllers
             catch (Exception e)
             {
                 _logger.LogError("Error trying to delete Expense: {e}.", e);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpGet("User/{userId}/Year/{year}/Month/{monthNumber}")]
+        public async Task<ActionResult<List<GetExpenseDto>>> GetUserExpensesByMonth(int userId, int year, int monthNumber)
+        {
+            try
+            {
+                var expenseList = await _repository.GetUserExpensesByMonth(userId, year, monthNumber);
+
+                _logger.LogInformation($"Expenses for user with Id: {userId}, fetched successfully.");
+                return Ok(_mapper.Map<List<GetExpenseDto>>(expenseList));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error trying to get Expenses for user with Id: {e}.", e);
                 return StatusCode(500, "Internal Server Error");
             }
         }
