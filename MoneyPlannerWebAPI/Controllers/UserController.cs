@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
+using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.UserDto;
+using MoneyPlannerWebAPI.Utilities;
+using System.Security.Claims;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
@@ -13,15 +17,17 @@ namespace MoneyPlannerWebAPI.Controllers
         private readonly IMapper _mapper;
         private readonly IUserRepository _repository;
         private readonly ILogger<UserController> _logger;
-        public UserController(IMapper mapper, IUserRepository repository, ILogger<UserController> logger)
+        private readonly IAuthorizationHelper _authorizationHelper;
+        public UserController(IMapper mapper, IUserRepository repository, ILogger<UserController> logger, IAuthorizationHelper authorizationHelper)
         {
             _mapper = mapper;
             _repository = repository;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<GetUserDto>> CreateUser(PostUserDto postUserDto)
+        [HttpPost]     
+        public async Task<ActionResult> CreateUser(PostUserDto postUserDto)
         {
             try
             {
@@ -32,9 +38,8 @@ namespace MoneyPlannerWebAPI.Controllers
                 if (validationStatus == ValidationStatus.Invalid_Password) return BadRequest(validationStatus.ToString());
                 if (validationStatus == ValidationStatus.Username_Already_Exist) return BadRequest(validationStatus.ToString());
               
-                var getUserDto = _mapper.Map<GetUserDto>(createdUser);
-                _logger.LogInformation($"User: {getUserDto.Username} with Id: {getUserDto.Id} was successfully created.");
-                return CreatedAtAction("GetUser", new { id = getUserDto.Id }, getUserDto);
+                _logger.LogInformation($"User: {createdUser!.Username} with Id: {createdUser.Id} was successfully created.");
+                return Ok("User Successfully created");
             }
             catch (Exception e)
             {
@@ -43,8 +48,9 @@ namespace MoneyPlannerWebAPI.Controllers
             }
 
         }
-
+        
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<GetUserDto>> GetUser(int id)
         {
             try
@@ -55,6 +61,13 @@ namespace MoneyPlannerWebAPI.Controllers
                     _logger.LogError("User Not Found");
                     return NotFound("User Not Found");
                 }
+
+                if (!_authorizationHelper.IsUserAuthorized(User, user.Id))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${user.Id}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 _logger.LogInformation($"User with Id: {user.Id}, fetched successfully.");
                 return Ok(_mapper.Map<GetUserDto>(user));
             }
