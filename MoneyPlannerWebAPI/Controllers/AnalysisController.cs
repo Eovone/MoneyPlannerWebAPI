@@ -1,23 +1,29 @@
 ﻿using AutoMapper;
 using Infrastructure.Repositories.AnalysisRepo;
 using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.AnalysisDto;
+using MoneyPlannerWebAPI.Utilities;
+using System.Security.Claims;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AnalysisController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly IAnalysisRepository _repository;
         private readonly ILogger<AnalysisController> _logger;
-        public AnalysisController(IMapper mapper, IAnalysisRepository repository, ILogger<AnalysisController> logger)
+        private readonly IAuthorizationHelper _authorizationHelper;
+        public AnalysisController(IMapper mapper, IAnalysisRepository repository, ILogger<AnalysisController> logger, IAuthorizationHelper authorizationHelper)
         {
             _mapper = mapper;
             _repository = repository;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
         [HttpPost("{userId}")]
@@ -25,6 +31,12 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                if (!_authorizationHelper.IsUserAuthorized(User, userId))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${userId}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var (monthAnalysis, validationStatus) = await _repository.CreateMonthAnalysis(postMonthlyAnalysisDto.Month, postMonthlyAnalysisDto.Year, userId);
 
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Income: {ValidationStatus}", validationStatus.ToString());
@@ -54,6 +66,13 @@ namespace MoneyPlannerWebAPI.Controllers
                     _logger.LogError($"MonthAnalysis with Id: {id}, does not exist.");
                     return NotFound($"MonthAnalysis with Id: {id}, could not be found.");
                 }
+
+                if (!_authorizationHelper.IsUserAuthorized(User, monthAnalysis.User.Id))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${monthAnalysis.User.Id}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 _logger.LogInformation($"MonthAnalysis with Id: {monthAnalysis.Id}, fetched successfully.");
                 return Ok(_mapper.Map<GetMonthlyAnalysisDto>(monthAnalysis));
             }
@@ -69,6 +88,12 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                if (!_authorizationHelper.IsUserAuthorized(User, userId))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${userId}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var monthAnalysis = await _repository.GetMonthAnalysisByMonth(monthNumber, year, userId);
                 if (monthAnalysis == null)
                 {
