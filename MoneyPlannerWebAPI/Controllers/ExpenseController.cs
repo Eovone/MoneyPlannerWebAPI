@@ -2,23 +2,29 @@
 using Entity;
 using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
+using MoneyPlannerWebAPI.Utilities;
+using System.Security.Claims;
 
 namespace MoneyPlannerWebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ExpenseController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly IExpenseRepository _repository;
         private readonly ILogger<ExpenseController> _logger;
-        public ExpenseController(IMapper mapper, IExpenseRepository repository, ILogger<ExpenseController> logger)
+        private readonly IAuthorizationHelper _authorizationHelper;
+        public ExpenseController(IMapper mapper, IExpenseRepository repository, ILogger<ExpenseController> logger, IAuthorizationHelper authorizationHelper)
         {
             _mapper = mapper;
             _repository = repository;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
         [HttpPost("{userId}")]
@@ -26,6 +32,12 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                if (!_authorizationHelper.IsUserAuthorized(User, userId))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${userId}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var (createdExpense, validationStatus) = await _repository.AddExpense(_mapper.Map<Expense>(postExpenseDto), userId);
 
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Expense: {ValidationStatus}", validationStatus.ToString());
@@ -56,6 +68,13 @@ namespace MoneyPlannerWebAPI.Controllers
                     _logger.LogError($"Expense with Id: {id}, does not exist.");
                     return NotFound($"Expense with Id: {id}, could not be found.");
                 }
+
+                if (!_authorizationHelper.IsUserAuthorized(User, expense.User.Id))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${expense.User.Id}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 _logger.LogInformation($"Expense with Id: {expense.Id}, fetched successfully.");
                 return Ok(_mapper.Map<GetExpenseDto>(expense));
             }
@@ -71,6 +90,12 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                if (!_authorizationHelper.IsUserAuthorized(User, userId))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${userId}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var expenseList = await _repository.GetUserExpenses(userId);
 
                 _logger.LogInformation($"Expenses for user with Id: {userId}, fetched successfully.");
@@ -88,6 +113,14 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                var originalExpense = await _repository.GetExpense(id);
+                if (originalExpense == null) return NotFound("Expense not found");
+                if (!_authorizationHelper.IsUserAuthorized(User, originalExpense.User.Id))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${originalExpense.User.Id}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var (editedExpense, validationStatus) = await _repository.EditExpense(_mapper.Map<Expense>(postExpense), id);
 
                 if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating Expense: {ValidationStatus}", validationStatus.ToString());
@@ -111,6 +144,14 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                var originalExpense = await _repository.GetExpense(id);
+                if (originalExpense == null) return NotFound("Income not found");
+                if (!_authorizationHelper.IsUserAuthorized(User, originalExpense.User.Id))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${originalExpense.User.Id}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var deletedExpense = await _repository.DeleteExpense(id);
                 if (deletedExpense == null)
                 {
@@ -132,6 +173,12 @@ namespace MoneyPlannerWebAPI.Controllers
         {
             try
             {
+                if (!_authorizationHelper.IsUserAuthorized(User, userId))
+                {
+                    _logger.LogWarning($"User with Id: {User.FindFirst(ClaimTypes.NameIdentifier)?.Value!} was denied access to controller for User with Id: ${userId}.");
+                    return Unauthorized("You are not authorized to perform this action.");
+                }
+
                 var expenseList = await _repository.GetUserExpensesByMonth(userId, year, monthNumber);
 
                 _logger.LogInformation($"Expenses for user with Id: {userId}, fetched successfully.");

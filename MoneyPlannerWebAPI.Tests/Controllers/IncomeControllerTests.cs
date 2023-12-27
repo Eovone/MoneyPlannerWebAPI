@@ -121,12 +121,14 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             int userId = 1;
 
             var postIncomeDto = new PostIncomeDto("testTitle", 20, new DateTime());
+
             var getIncomeDto = new GetIncomeDto();
             getIncomeDto.Id = 1;
             getIncomeDto.Date = new DateTime();
             getIncomeDto.Title = "testTitle";
             getIncomeDto.Amount = 20;
             getIncomeDto.ReOccuring = false;
+
             var income = new Income("testTitle", 20, new DateTime());
             income.Id = 1;
             income.ReOccuring = false;
@@ -633,6 +635,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.Equal(401, unauthorizedResult.StatusCode);
         }
+
         [Fact]
         public async Task GetUserIncomesByMonth_Returns_List_Of_Incomes_Returns_200()
         {
