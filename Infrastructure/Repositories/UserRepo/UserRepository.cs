@@ -29,21 +29,7 @@ namespace Infrastructure.Repositories.UserRepo
             return (user, ValidationStatus.Success);
         }
 
-        public async Task<User?> GetUser(int id) => await _context.Users.FindAsync(id);       
-
-        public async Task<(LoginDto?, ValidationStatus)> LoginUser(string username, string password)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-
-            if (user == null) return (null, ValidationStatus.Not_Found);
-
-            var hashedPassword = PasswordHasher.HashPassword(password, user.PasswordSalt);
-
-            if (hashedPassword != user.PasswordHash) return (null, ValidationStatus.Wrong_Password);            
-
-            var loginDto = new LoginDto { Id = user.Id, IsAuthorized = true };
-            return (loginDto, ValidationStatus.Success);
-        }
+        public async Task<User?> GetUser(int id) => await _context.Users.FindAsync(id); 
 
         #region Private Methods
         private bool IsUsernameTaken(string username)

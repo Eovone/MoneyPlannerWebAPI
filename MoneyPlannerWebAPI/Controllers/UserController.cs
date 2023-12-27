@@ -63,28 +63,6 @@ namespace MoneyPlannerWebAPI.Controllers
                 _logger.LogError(e, $"Error trying to get user with Id: {id}.");
                 return StatusCode(500, "Internal Server Error");
             }
-        }
-
-        [HttpPost("Login")]
-        public async Task<ActionResult<GetLoginUserDto>> LoginUser(PostUserDto postUserDto)
-        {
-            try
-            {
-                var (isUserLoggedIn, validationStatus) = await _repository.LoginUser(postUserDto.Username, postUserDto.Password);
-
-                if (validationStatus != ValidationStatus.Success) _logger.LogError("Error logging in User: {ValidationStatus}", validationStatus.ToString());
-
-                if (validationStatus == ValidationStatus.Not_Found) return NotFound("User Not Found");
-                if (validationStatus == ValidationStatus.Wrong_Password) return Unauthorized("Wrong Password");
-             
-                _logger.LogInformation($"User with username: {postUserDto.Username} logged in");
-                return Ok(_mapper.Map<GetLoginUserDto>(isUserLoggedIn));
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Error trying to login User.");
-                return StatusCode(500, "Internal Server Error");
-            }    
-        }
+        }       
     }
 }
