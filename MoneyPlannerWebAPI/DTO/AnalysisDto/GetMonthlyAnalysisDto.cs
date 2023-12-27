@@ -1,5 +1,4 @@
-﻿using Entity;
-using MoneyPlannerWebAPI.DTO.ExpenseDto;
+﻿using MoneyPlannerWebAPI.DTO.ExpenseDto;
 using MoneyPlannerWebAPI.DTO.IncomeDto;
 
 namespace MoneyPlannerWebAPI.DTO.AnalysisDto

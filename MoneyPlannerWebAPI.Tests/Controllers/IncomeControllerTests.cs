@@ -29,7 +29,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             _authorizationHelperMock = new Mock<IAuthorizationHelper>();
 
             _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
-                            .Returns(true);
+                                    .Returns(true);
 
             _sut = new IncomeController(_mockMapper.Object, _incomeRepositoryMock.Object, _mockLogger.Object, _authorizationHelperMock.Object);
         }
@@ -50,7 +50,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
@@ -64,6 +64,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.Equal(401, unauthorizedResult.StatusCode);
         }
+
         [Fact]
         public async Task CreateIncome_User_NotFound_Returns_404()
         {
@@ -81,6 +82,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             Assert.Equal(404, objectResult.StatusCode);
             Assert.Equal("User Not Found", objectResult.Value);
         }
+
         [Fact]
         public async Task CreateIncome_InvalidAmount_Of_Chars_In_Title_Returns_400()
         {
@@ -169,7 +171,6 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         [Fact]
         public async Task GetIncome_UnauthorizedUser_Returns_401()
         {
-            int userId = 1;
             int unauthorizedUserId = 2;
             var income = new Income("testIncome", 500, new DateTime());
             income.Id = 1;
@@ -195,7 +196,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
@@ -203,7 +204,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
                 HttpContext = new DefaultHttpContext { User = userMock.Object }
             };
 
-            var result = await _sut.GetIncome(userId);
+            var result = await _sut.GetIncome(1);
 
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.Equal(401, unauthorizedResult.StatusCode);
@@ -289,7 +290,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
@@ -371,7 +372,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
@@ -525,7 +526,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
@@ -622,7 +623,7 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Identity!.IsAuthenticated).Returns(true);
             userMock.Setup(u => u.Claims).Returns(claims);
 
             _sut.ControllerContext = new ControllerContext
