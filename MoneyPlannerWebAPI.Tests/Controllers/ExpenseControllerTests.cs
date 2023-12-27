@@ -2,11 +2,14 @@
 using Entity;
 using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneyPlannerWebAPI.Controllers;
 using MoneyPlannerWebAPI.DTO.ExpenseDto;
+using MoneyPlannerWebAPI.Utilities;
 using Moq;
+using System.Security.Claims;
 using System.Text;
 
 namespace MoneyPlannerWebAPI.Tests.Controllers
@@ -16,16 +19,51 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         private Mock<IExpenseRepository> _expenseRepositoryMock;
         private Mock<ILogger<ExpenseController>> _mockLogger;
         private Mock<IMapper> _mockMapper;
+        private Mock<IAuthorizationHelper> _authorizationHelperMock;
         private ExpenseController _sut;
         public ExpenseControllerTests()
         {
             _expenseRepositoryMock = new Mock<IExpenseRepository>();
             _mockMapper = new Mock<IMapper>();
             _mockLogger = new Mock<ILogger<ExpenseController>>();
+            _authorizationHelperMock = new Mock<IAuthorizationHelper>();
 
-            _sut = new ExpenseController(_mockMapper.Object, _expenseRepositoryMock.Object, _mockLogger.Object);
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                            .Returns(true);
+
+            _sut = new ExpenseController(_mockMapper.Object, _expenseRepositoryMock.Object, _mockLogger.Object, _authorizationHelperMock.Object);
         }
         #region CreateExpense-Tests
+        [Fact]
+        public async Task CreateIncome_UnauthorizedUser_Returns_401()
+        {
+            var postExpenseDto = new PostExpenseDto("testTitle", 20, new DateTime());
+            int unauthorizedUserId = 2;
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.CreateExpense(postExpenseDto, unauthorizedUserId);
+
+            Assert.NotNull(result);
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
         [Fact]
         public async Task CreateExpense_User_NotFound_Returns_404()
         {
@@ -129,6 +167,49 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         #endregion
         #region GetExpense-Tests
         [Fact]
+        public async Task GetExpense_UnauthorizedUser_Returns_401()
+        {
+            int userId = 1;
+            int unauthorizedUserId = 2;
+            var expense = new Expense("testExpense", 500, new DateTime());
+            expense.Id = 1;
+            expense.ReOccuring = false;
+            expense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            expense.User.Id = 1;
+
+            _expenseRepositoryMock.Setup(x => x.GetExpense(1))
+                                  .ReturnsAsync(expense);
+
+            _mockMapper.Setup(x => x.Map<GetExpenseDto>(expense))
+                       .Returns(new GetExpenseDto());
+
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.GetExpense(userId);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
+        [Fact]
         public async Task GetExpense_Expense_NotFound_Returns_404()
         {
             _expenseRepositoryMock.Setup(x => x.GetExpense(1))
@@ -148,6 +229,8 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             var expense = new Expense("testIncome", 500, new DateTime());
             expense.Id = 1;
             expense.ReOccuring = false;
+            expense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            expense.User.Id = 1;
 
             _expenseRepositoryMock.Setup(x => x.GetExpense(1))
                                   .ReturnsAsync(expense);
@@ -177,6 +260,49 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
         #endregion
         #region GetUserExpenses-Tests
+        [Fact]
+        public async Task GetUserExpenses_UnauthorizedUser_Returns_401()
+        {
+            int userId = 1;
+            int unauthorizedUserId = 2;
+            var mockExpenseList = new List<Expense>
+            {
+                new Expense("expense1", 200, new DateTime()) { Id = 1, ReOccuring = false, User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash"){ Id = 1 } },
+                new Expense("expense2", 200, new DateTime()) { Id = 2, ReOccuring = false, User = new User("testUsera", Encoding.UTF8.GetBytes("testSalt"), "testHash"){ Id = 2 } },
+            };
+
+            _expenseRepositoryMock.Setup(repo => repo.GetUserExpenses(userId))
+                                  .ReturnsAsync(mockExpenseList);
+
+            _mockMapper.Setup(x => x.Map<List<GetExpenseDto>>(It.IsAny<List<Expense>>()))
+                       .Returns(new List<GetExpenseDto>());
+
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.GetUserExpenses(userId);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
         [Fact]
         public async Task GetUserExpenses_Returns_List_Of_Expenses_Returns_200()
         {
@@ -217,17 +343,67 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         #endregion
         #region EditExpense-Tests
         [Fact]
-        public async Task EditExpense_Valid_Input_Returns_200()
+        public async Task EditIncome_UnAuthorized_Returns_401()
         {
             int expenseId = 1;
-
+            int unauthorizedUserId = 2;
             var postExpenseDto = new PostExpenseDto("testTitle", 20, new DateTime());
             var editedExpense = new Expense("testTitle", 20, new DateTime());
             editedExpense.Id = expenseId;
             editedExpense.ReOccuring = false;
+            editedExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            editedExpense.User.Id = 1;
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(editedExpense);
+
+            _mockMapper.Setup(x => x.Map<GetExpenseDto>(editedExpense))
+                       .Returns(new GetExpenseDto());
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.EditExpense(postExpenseDto, expenseId);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task EditExpense_Valid_Input_Returns_200()
+        {
+            int expenseId = 1;
+            var postExpenseDto = new PostExpenseDto("testTitle", 20, new DateTime());
+            var editedExpense = new Expense("testTitle", 20, new DateTime());
+            editedExpense.Id = expenseId;
+            editedExpense.ReOccuring = false;
+            editedExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            editedExpense.User.Id = 1;
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(true);
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(editedExpense);
 
             _expenseRepositoryMock.Setup(repo => repo.EditExpense(It.IsAny<Expense>(), expenseId))
-                                 .ReturnsAsync((editedExpense, ValidationStatus.Success));
+                                  .ReturnsAsync((editedExpense, ValidationStatus.Success));
 
             _mockMapper.Setup(x => x.Map<GetExpenseDto>(editedExpense))
                        .Returns(new GetExpenseDto());
@@ -258,6 +434,14 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         public async Task EditExpense_InvalidAmountOfCharacters_Returns_400()
         {
             int expenseId = 1;
+            var previousExpense = new Expense("testTitle", 20, new DateTime());
+            previousExpense.Id = expenseId;
+            previousExpense.ReOccuring = false;
+            previousExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            previousExpense.User.Id = 1;
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(previousExpense);
 
             _expenseRepositoryMock.Setup(repo => repo.EditExpense(It.IsAny<Expense>(), expenseId))
                                   .ReturnsAsync((null, ValidationStatus.Invalid_Amount_Of_Characters));
@@ -273,6 +457,14 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         public async Task EditExpense_InvalidAmount_Returns_400()
         {
             int expenseId = 1;
+            var previousExpense = new Expense("testTitle", 20, new DateTime());
+            previousExpense.Id = expenseId;
+            previousExpense.ReOccuring = false;
+            previousExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            previousExpense.User.Id = 1;
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(previousExpense);
 
             _expenseRepositoryMock.Setup(repo => repo.EditExpense(It.IsAny<Expense>(), expenseId))
                                   .ReturnsAsync((null, ValidationStatus.Invalid_Amount));
@@ -288,6 +480,14 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         public async Task EditExpense_InternalServerError_Returns_500()
         {
             int expenseId = 1;
+            var previousExpense = new Expense("testTitle", 20, new DateTime());
+            previousExpense.Id = expenseId;
+            previousExpense.ReOccuring = false;
+            previousExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            previousExpense.User.Id = 1;
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(previousExpense);
 
             _expenseRepositoryMock.Setup(repo => repo.EditExpense(It.IsAny<Expense>(), expenseId))
                                  .ThrowsAsync(new Exception("Simulated repository exception"));
@@ -301,12 +501,55 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         #endregion
         #region DeleteExpense-Tests
         [Fact]
+        public async Task DeleteExpense_UnAuthorized_Returns_401()
+        {
+            int expenseId = 1;
+            int unauthorizedUserId = 2;
+            var deleteExpense = new Expense("testTitle", 20, new DateTime());
+            deleteExpense.Id = expenseId;
+            deleteExpense.ReOccuring = false;
+            deleteExpense.User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            deleteExpense.User.Id = 1;
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(deleteExpense);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.DeleteExpense(expenseId);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
+        [Fact]
         public async Task DeleteExpense_ValidId_Returns_204()
         {
             int expenseId = 1;
 
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(new Expense("asd", 20, new DateTime()) { Id = expenseId, User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash") { Id = 1 } });
+
             _expenseRepositoryMock.Setup(repo => repo.DeleteExpense(expenseId))
-                                 .ReturnsAsync(new Expense("asd", 20, new DateTime()) { Id = expenseId });
+                                  .ReturnsAsync(new Expense("asd", 20, new DateTime()) { Id = expenseId });
+
             var result = await _sut.DeleteExpense(expenseId);
 
             var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -317,6 +560,9 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         public async Task DeleteExpense_Expense_NotFound_Returns_404()
         {
             int expenseId = 1;
+
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(new Expense("asd", 20, new DateTime()) { Id = expenseId, User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash") { Id = 1 } });
 
             _expenseRepositoryMock.Setup(repo => repo.DeleteExpense(expenseId))
                                   .ReturnsAsync(null as Expense);
@@ -333,6 +579,9 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         {
             int expenseId = 1;
 
+            _expenseRepositoryMock.Setup(repo => repo.GetExpense(expenseId))
+                                  .ReturnsAsync(new Expense("asd", 20, new DateTime()) { Id = expenseId, User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash") { Id = 1 } });
+
             _expenseRepositoryMock.Setup(repo => repo.DeleteExpense(expenseId))
                                   .ThrowsAsync(new Exception("Simulated repository exception"));
 
@@ -344,6 +593,49 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         }
         #endregion
         #region GetUserExpensesByMonth-Tests
+        [Fact]
+        public async Task GetUserExpensesByMonth_UnauthorizedUser_Returns_401()
+        {
+            int userId = 1;
+            int unauthorizedUserId = 2;
+            var mockExpenseList = new List<Expense>
+            {
+                new Expense("expense1", 200, new DateTime()) { Id = 1, ReOccuring = false, User = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash"){ Id = 1 } },
+                new Expense("expense2", 200, new DateTime()) { Id = 2, ReOccuring = false, User = new User("testUsera", Encoding.UTF8.GetBytes("testSalt"), "testHash"){ Id = 2 } },
+            };
+
+            _expenseRepositoryMock.Setup(repo => repo.GetUserExpensesByMonth(userId, 2023, 12))
+                                  .ReturnsAsync(mockExpenseList);
+
+            _mockMapper.Setup(x => x.Map<List<GetExpenseDto>>(It.IsAny<List<Expense>>()))
+                       .Returns(new List<GetExpenseDto>());
+
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.GetUserExpensesByMonth(userId, 2023, 12);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
         [Fact]
         public async Task GetUserExpensesByMonth_Returns_List_Of_Expenses_Returns_200()
         {

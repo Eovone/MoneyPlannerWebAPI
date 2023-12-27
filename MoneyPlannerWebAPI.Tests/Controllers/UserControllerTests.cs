@@ -2,11 +2,14 @@
 using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneyPlannerWebAPI.Controllers;
 using MoneyPlannerWebAPI.DTO.UserDto;
+using MoneyPlannerWebAPI.Utilities;
 using Moq;
+using System.Security.Claims;
 using System.Text;
 
 namespace MoneyPlannerWebAPI.Tests.Controllers
@@ -17,15 +20,20 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
         private Mock<ILogger<UserController>> _mockLogger;
         private Mock<IMapper> _mockMapper;
         private UserController _sut;
+        private Mock<IAuthorizationHelper> _authorizationHelperMock;
         public UserControllerTests()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _mockLogger = new Mock<ILogger<UserController>>();
             _mockMapper = new Mock<IMapper>();
+            _authorizationHelperMock = new Mock<IAuthorizationHelper>();
 
-            _sut = new UserController(_mockMapper.Object, _userRepositoryMock.Object, _mockLogger.Object);
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(true);
+
+            _sut = new UserController(_mockMapper.Object, _userRepositoryMock.Object, _mockLogger.Object, _authorizationHelperMock.Object);
         }
-        #region CreateUser-Tests
+        #region CreateUser-Tests 
         [Fact]
         public async Task CreateUser_Invalid_Password_Returns_400()
         {
@@ -36,8 +44,8 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var result = await _sut.CreateUser(postUserDto);
 
-            Assert.IsType<BadRequestObjectResult>(result.Result);
-            var objectResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.IsType<BadRequestObjectResult>(result);
+            var objectResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.NotNull(objectResult);
             Assert.Equal(400, objectResult.StatusCode);
             Assert.Equal("Invalid_Password", objectResult.Value);
@@ -53,8 +61,8 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var result = await _sut.CreateUser(postUserDto);
 
-            Assert.IsType<BadRequestObjectResult>(result.Result);
-            var objectResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.IsType<BadRequestObjectResult>(result);
+            var objectResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.NotNull(objectResult);
             Assert.Equal(400, objectResult.StatusCode);
             Assert.Equal("Username_Already_Exist", objectResult.Value);
@@ -68,17 +76,13 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             user.Id = 1;
 
             _userRepositoryMock.Setup(x => x.AddUser(postUserDto.Username, postUserDto.Password))
-                               .ReturnsAsync((user, ValidationStatus.Success));
-           
-            _mockMapper.Setup(x => x.Map<GetUserDto>(user))
-                       .Returns(new GetUserDto());
+                               .ReturnsAsync((user, ValidationStatus.Success)); 
 
             var result = await _sut.CreateUser(postUserDto);
 
-            var createdAtResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            Assert.Equal(201, createdAtResult.StatusCode);
-            Assert.NotNull(createdAtResult.Value);
-            Assert.IsType<GetUserDto>(createdAtResult.Value);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.NotNull(okResult);
         }
 
         [Fact]
@@ -91,12 +95,50 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
 
             var result = await _sut.CreateUser(postUserDto);
 
-            var objectResult = Assert.IsType<ObjectResult>(result.Result);
+            var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, objectResult.StatusCode);
             Assert.Equal("Internal Server Error", objectResult.Value);
         }
         #endregion
         #region GetUser-Tests
+        [Fact]
+        public async Task GetUser_UnauthorizedUser_Returns_401()
+        {
+            int userId = 1;
+            int unauthorizedUserId = 2;
+            var user = new User("testUser", Encoding.UTF8.GetBytes("testSalt"), "testHash");
+            user.Id = 1;            
+
+            _userRepositoryMock.Setup(x => x.GetUser(userId))
+                               .ReturnsAsync(user);
+
+            _mockMapper.Setup(x => x.Map<GetUserDto>(user))
+                       .Returns(new GetUserDto());
+
+            _authorizationHelperMock.Setup(helper => helper.IsUserAuthorized(It.IsAny<ClaimsPrincipal>(), It.IsAny<int>()))
+                                    .Returns(false);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, unauthorizedUserId.ToString()),
+                new Claim(ClaimTypes.Name, "SomeUsername"),
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var userMock = new Mock<ClaimsPrincipal>();
+            userMock.Setup(u => u.Identity.IsAuthenticated).Returns(true);
+            userMock.Setup(u => u.Claims).Returns(claims);
+
+            _sut.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = userMock.Object }
+            };
+
+            var result = await _sut.GetUser(userId);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
         [Fact]
         public async Task GetUser_UserNotFound_Returns_404()
         {
@@ -142,73 +184,6 @@ namespace MoneyPlannerWebAPI.Tests.Controllers
             Assert.Equal(500, objectResult.StatusCode);
             Assert.Equal("Internal Server Error", objectResult.Value);
         }
-        #endregion
-        #region Login-Tests
-        [Fact]
-        public async Task LoginUser_User_NotFound_Returns_404()
-        {
-            var postUserDto = new PostUserDto { Username = "testUser", Password = "testPassword" };
-            _userRepositoryMock.Setup(x => x.LoginUser(postUserDto.Username, postUserDto.Password))
-                               .ReturnsAsync((null, ValidationStatus.Not_Found));
-
-            var result = await _sut.LoginUser(postUserDto);
-
-            Assert.NotNull(result);
-            var objectResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-            Assert.Equal(404, objectResult.StatusCode);
-            Assert.Equal("User Not Found", objectResult.Value);
-        }
-
-        [Fact]
-        public async Task LoginUser_Wrong_Password_Returns_401()
-        {
-            var postUserDto = new PostUserDto { Username = "testUser", Password = "testPassword" };
-            _userRepositoryMock.Setup(x => x.LoginUser(postUserDto.Username, postUserDto.Password))
-                               .ReturnsAsync((null, ValidationStatus.Wrong_Password));
-
-            var result = await _sut.LoginUser(postUserDto);
-
-            Assert.NotNull(result);
-            var objectResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
-            Assert.Equal(401, objectResult.StatusCode);
-            Assert.Equal("Wrong Password", objectResult.Value);
-        }
-
-        [Fact]
-        public async Task LoginUser_Successfully_Returns_200()
-        {
-            var postUserDto = new PostUserDto { Username = "testUser", Password = "testPassword" };
-            var loginDto = new LoginDto { Id = 1, IsAuthorized = true };
-            var getLoginUserDto = new GetLoginUserDto {  Id = 1, IsAuthorized = true };
-
-            _userRepositoryMock.Setup(x => x.LoginUser(postUserDto.Username, postUserDto.Password))
-                               .ReturnsAsync((loginDto, ValidationStatus.Success));
-
-            _mockMapper.Setup(x => x.Map<GetLoginUserDto>(loginDto))
-                       .Returns(getLoginUserDto);
-
-            var result = await _sut.LoginUser(postUserDto);
-
-            var objectResult = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal(200, objectResult.StatusCode);
-            Assert.NotNull(objectResult.Value);
-            Assert.IsType<GetLoginUserDto>(objectResult.Value);
-        }
-
-        [Fact]
-        public async Task LoginUser_Exception_Returns_500()
-        {
-            var postUserDto = new PostUserDto { Username = "testUser", Password = "testPassword" };
-
-            _userRepositoryMock.Setup(x => x.LoginUser(postUserDto.Username, postUserDto.Password))
-                               .ThrowsAsync(new Exception("Simulated exception"));
-
-            var result = await _sut.LoginUser(postUserDto);
-
-            var objectResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, objectResult.StatusCode);
-            Assert.Equal("Internal Server Error", objectResult.Value);
-        }
-        #endregion
+        #endregion 
     }
 }

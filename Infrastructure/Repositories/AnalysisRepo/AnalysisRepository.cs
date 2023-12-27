@@ -32,7 +32,11 @@ namespace Infrastructure.Repositories.AnalysisRepo
             await _context.SaveChangesAsync();
             return (monthAnalysis, ValidationStatus.Success);            
         }
-        public async Task<MonthAnalysis?> GetMonthAnalysis(int id) => await _context.MonthAnalysis.FindAsync(id);
+        public async Task<MonthAnalysis?> GetMonthAnalysis(int id) 
+        {
+            return await _context.MonthAnalysis.Include(m => m.User)
+                                               .FirstOrDefaultAsync(m => m.Id == id);
+        } 
 
         public async Task<MonthAnalysis?> GetMonthAnalysisByMonth(int monthNumber, int year, int userId)
         {

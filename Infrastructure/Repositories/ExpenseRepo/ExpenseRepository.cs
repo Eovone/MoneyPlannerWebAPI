@@ -26,7 +26,11 @@ namespace Infrastructure.Repositories.ExpenseRepo
             return (expense, ValidationStatus.Success);
         }       
 
-        public async Task<Expense?> GetExpense(int id) => await _context.Expenses.FindAsync(id);
+        public async Task<Expense?> GetExpense(int id)
+        {
+            return await _context.Expenses.Include(i => i.User)
+                                          .FirstOrDefaultAsync(i => i.Id == id);
+        }
 
         public async Task<List<Expense>?> GetUserExpenses(int userId) => await _context.Expenses.Where(x => x.User.Id == userId).ToListAsync();
 
