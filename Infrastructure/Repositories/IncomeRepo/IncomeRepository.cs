@@ -24,9 +24,13 @@ namespace Infrastructure.Repositories.IncomeRepo
             await _context.SaveChangesAsync();
 
             return (income, ValidationStatus.Success);
-        }     
+        }
 
-        public async Task<Income?> GetIncome(int id) => await _context.Incomes.FindAsync(id);      
+        public async Task<Income?> GetIncome(int id)
+        {               
+            return await _context.Incomes.Include(i => i.User)
+                                         .FirstOrDefaultAsync(i => i.Id == id);
+        }
 
         public async Task<List<Income>?> GetUserIncomes(int userId) => await _context.Incomes.Where(x => x.User.Id == userId)
                                                                                              .ToListAsync();
