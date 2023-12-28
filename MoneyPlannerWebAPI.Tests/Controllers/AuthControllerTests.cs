@@ -1,5 +1,4 @@
-﻿using Entity;
-using Infrastructure.Repositories.AuthRepo;
+﻿using Infrastructure.Repositories.AuthRepo;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

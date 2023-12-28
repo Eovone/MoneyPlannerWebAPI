@@ -1,6 +1,5 @@
 ﻿using Entity;
 using Infrastructure.Utilities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.UserRepo
 {
