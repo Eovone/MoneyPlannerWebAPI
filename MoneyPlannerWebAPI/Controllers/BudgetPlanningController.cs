@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Entity;
 using Infrastructure.Repositories.BudgetPlanningRepo;
+using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoneyPlannerWebAPI.DTO.BudgetPlanningDto;
@@ -40,7 +41,13 @@ namespace MoneyPlannerWebAPI.Controllers
                 var budgetPlanItems = _mapper.Map<List<BudgetPlanItem>>(postBudgetPlanningDto.BudgetPlanItemsDto);
                 var budgetPlan = _mapper.Map<BudgetPlan>(postBudgetPlanningDto);
 
-                var createdBudgetPlan = await _repository.CreateBudgetPlan(budgetPlan, budgetPlanItems, userId);
+                var (createdBudgetPlan, validationStatus) = await _repository.CreateBudgetPlan(budgetPlan, budgetPlanItems, userId);
+
+                if (validationStatus != ValidationStatus.Success) _logger.LogError("Error creating BudgetPlan: {ValidationStatus}", validationStatus.ToString());
+
+                if (validationStatus == ValidationStatus.Not_Found) return NotFound("BudgetPlan Not Found");
+                if (validationStatus == ValidationStatus.Invalid_Amount_Of_Characters) return BadRequest($"{validationStatus} in the title.");
+                if (validationStatus == ValidationStatus.Invalid_Amount) return BadRequest($"{validationStatus}");
 
                 var getBudgetPlan = _mapper.Map<GetBudgetPlanningDto>(createdBudgetPlan);
                 _logger.LogInformation($"BudgetPlan with Id: {budgetPlan.Id} was successfully created.");

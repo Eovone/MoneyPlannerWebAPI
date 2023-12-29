@@ -1,4 +1,5 @@
 ﻿using Entity;
+using Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.BudgetPlanningRepo
@@ -12,8 +13,18 @@ namespace Infrastructure.Repositories.BudgetPlanningRepo
         }
       
 
-        public async Task<BudgetPlan?> CreateBudgetPlan(BudgetPlan budgetPlan, List<BudgetPlanItem> budgetPlanItems, int userId)
+        public async Task<(BudgetPlan?, ValidationStatus)> CreateBudgetPlan(BudgetPlan budgetPlan, List<BudgetPlanItem> budgetPlanItems, int userId)
         {
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return (null, ValidationStatus.Not_Found);
+
+            foreach (var item in budgetPlanItems)
+            {
+                if (!Validator.IsValidLength(item.Title)) return (null, ValidationStatus.Invalid_Amount_Of_Characters);
+                if (!Validator.IsValidAmount(item.Amount)) return (null, ValidationStatus.Invalid_Amount);
+            }
+
             var previousBudgetPlan = await _context.BudgetPlans.Include(bp => bp.BudgetPlanItems)
                                                                .FirstOrDefaultAsync(bp => bp.UserId == userId);
             if (previousBudgetPlan != null)
@@ -32,7 +43,7 @@ namespace Infrastructure.Repositories.BudgetPlanningRepo
             }
             
             await _context.SaveChangesAsync();
-            return budgetPlan;
+            return (budgetPlan, ValidationStatus.Success);
         }
 
         public async Task<BudgetPlan?> GetBudgetPlan(int id)
