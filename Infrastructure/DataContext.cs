@@ -39,5 +39,7 @@ namespace Infrastructure
         public virtual DbSet<Income> Incomes { get; set; }
         public virtual DbSet<Expense> Expenses { get; set; }
         public virtual DbSet<MonthAnalysis> MonthAnalysis { get; set; }
+        public virtual DbSet<BudgetPlan> BudgetPlans { get; set; }
+        public virtual DbSet<BudgetPlanItem> BudgetPlansItems { get; set; }
     }
 }
