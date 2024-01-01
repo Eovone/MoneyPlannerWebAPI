@@ -10,8 +10,7 @@ namespace Infrastructure.Repositories.BudgetPlanningRepo
         public BudgetPlanningRepository(DataContext context)
         {
             _context = context;
-        }
-      
+        }      
 
         public async Task<(BudgetPlan?, ValidationStatus)> CreateBudgetPlan(BudgetPlan budgetPlan, List<BudgetPlanItem> budgetPlanItems, int userId)
         {
