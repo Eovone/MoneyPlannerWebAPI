@@ -1,6 +1,7 @@
 using Infrastructure;
 using Infrastructure.Repositories.AnalysisRepo;
 using Infrastructure.Repositories.AuthRepo;
+using Infrastructure.Repositories.BudgetPlanningRepo;
 using Infrastructure.Repositories.ExpenseRepo;
 using Infrastructure.Repositories.IncomeRepo;
 using Infrastructure.Repositories.UserRepo;
@@ -62,6 +63,7 @@ builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IAnalysisRepository, AnalysisRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthorizationHelper, AuthorizationHelper>();
+builder.Services.AddScoped<IBudgetPlanningRepository, BudgetPlanningRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

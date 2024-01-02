@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Entity;
 using Infrastructure.Repositories.UserRepo;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;

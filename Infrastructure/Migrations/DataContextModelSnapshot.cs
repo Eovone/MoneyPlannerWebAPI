@@ -22,6 +22,53 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Entity.BudgetPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("SummaryAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BudgetPlans");
+                });
+
+            modelBuilder.Entity("Entity.BudgetPlanItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("BudgetPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsIncome")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetPlanId");
+
+                    b.ToTable("BudgetPlansItems");
+                });
+
             modelBuilder.Entity("Entity.Expense", b =>
                 {
                     b.Property<int>("Id")
@@ -166,6 +213,13 @@ namespace Infrastructure.Migrations
                     b.ToTable("IncomeMonthAnalysis");
                 });
 
+            modelBuilder.Entity("Entity.BudgetPlanItem", b =>
+                {
+                    b.HasOne("Entity.BudgetPlan", null)
+                        .WithMany("BudgetPlanItems")
+                        .HasForeignKey("BudgetPlanId");
+                });
+
             modelBuilder.Entity("Entity.Expense", b =>
                 {
                     b.HasOne("Entity.User", "User")
@@ -227,6 +281,11 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("MonthAnalysisId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Entity.BudgetPlan", b =>
+                {
+                    b.Navigation("BudgetPlanItems");
                 });
 
             modelBuilder.Entity("Entity.User", b =>
